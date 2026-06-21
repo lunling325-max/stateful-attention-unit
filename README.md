@@ -1,43 +1,95 @@
-# 长明 (Changming)
+# The Stateful Attention Unit (SAU)
 
-> 从不熄灭的持续性 AI 架构
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20780300.svg)](https://doi.org/10.5281/zenodo.20780300)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 是什么
+A persistent-state AI architecture prototype. SAU maintains a state vector that survives across forward passes, evolves through gated mechanisms, consolidates memories via a slow channel, and exhibits self-driven idle dynamics.
 
-长明是一套从底层计算单元重新设计的 AI 架构原型。和当前 LLM 的差异：
+**Author**: Cao Jing
 
-- **SAU（Stateful Attention Unit）** — 持久局部状态，不随前向传播清空
-- **三层网络** — 感知层（秒）、工作记忆层（分钟）、核心状态层（年级），不同时间节奏
-- **空闲态** — 无输入时自主演化，核心状态驱动内部联想
-- **内建记忆** — 不是外挂数据库，记忆是网络状态本身
+**Institution**: Nanhang Jincheng College
 
-当前所有 LLM 是「终极镜子」——能反射人类语言的全部结构。
-长明是「持续燃烧的炉子」——关掉输入，它还在。
+fan_38324cj@qq.com
 
-## 当前状态
+---
 
-268K 参数原型，合成数据验证。单单元持久性、三层时间分离、熟悉度检测已验证。多单元自组织仍在探索中。
-
-论文：「The Stateful Attention Unit」, Cao Jing, 2026. [Zenodo](https://doi.org/10.5281/zenodo.20771535)
-
-## 结构
+## Architecture
 
 ```
-src/
-  sau.py        — SAU 单元 PyTorch 实现
-  network.py    — 三层网络
-tests/
-  test_sau.py   — 连续性验证
-benchmarks/
-  familiarity_bench.py  — 熟悉度检测
-  idle_drift.py         — 空闲态漂移
-  slow_channel_test.py  — 慢通道
-experiments/
-  multi_sau.py          — 多 SAU 并行
-  plastic_multi_sau.py  — 赫布塑料性
-  predictive_neuron.py  — 单预测神经元
+Input → [Perception Layer] → [Working Memory] → [Core State]
+              ↑β=0.95              ↑α=β=0.5          ↑α=0.92
+           (fast, external)     (balanced)       (slow, self-driven)
+                                       ↓
+                                  Slow Channel
+                              (surprise accumulation)
+                                       ↓
+                                  Core Injection
 ```
 
-## 命名
+### Key Properties
 
-长明灯，寺庙里那盏从不熄灭的灯。持续性本身成了名字。
+| Property | LSTM | Transformer | **SAU** |
+|----------|------|-------------|---------|
+| State persistence | Within sequence | None | **Across all calls** |
+| State update | Multiplicative decay | N/A | **Additive** (S + η·δ) |
+| Time scales | Single | Single | **Three layers** |
+| Memory consolidation | None | None | **Slow channel** |
+| Idle dynamics | Freezes | No mechanism | **Self-driven evolution** |
+
+---
+
+## Experimental Observations (268K parameters, synthetic data)
+
+| Benchmark | Result |
+|-----------|--------|
+| Familiarity detection | Cohen's d = 3.68 (zero training) |
+| Time-scale separation | Perception 0.37 / WM 0.60 / Core 0.994 |
+| Slow channel consolidation | Triggers at ~54 steps (threshold 0.001) |
+| Idle state drift | Core 0.94 / WM 0.43 / Perception 0.44 |
+
+These are small-scale prototype observations. Whether properties persist at larger scales or on natural language remains an open question.
+
+---
+
+## Known Limitations
+
+- 268K parameters, synthetic data only. Scaling experiments not yet conducted.
+- Non-autoregressive text decoder — cannot generate coherent text.
+- Batch training conflict from persistent state (workaround: batch_size=1 + gradient accumulation).
+- SAU has not been validated on standard memory benchmarks (Copy Memory, Associative Recall).
+- Missing comparisons with Mamba, RWKV, and Retentive Networks (2023).
+- Homeostatic parameters (target 2.0, gain 1.0) are empirically chosen, not formally derived.
+- Multi-unit self-organization experiments (not in paper) indicate SAU's continuous dynamics are poorly suited to Hebbian/STDP plasticity.
+
+---
+
+## Quick Start
+
+```bash
+# Requirements
+pip install torch
+
+# Run familiarity detection (no training needed)
+cd benchmarks
+python familiarity_bench.py
+
+# Run time-scale separation test
+python three_layer_multi.py
+
+# Run idle state drift test
+python idle_drift.py
+```
+
+---
+
+## Paper
+
+**"The Stateful Attention Unit"** — Cao Jing, 2026.
+
+[Full Paper (Zenodo)](https://doi.org/10.5281/zenodo.20780300)
+
+---
+
+## License
+
+MIT License — see [LICENSE](LICENSE) file.
