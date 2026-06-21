@@ -5,12 +5,6 @@
 
 A persistent-state AI architecture prototype. SAU maintains a state vector that survives across forward passes, evolves through gated mechanisms, consolidates memories via a slow channel, and exhibits self-driven idle dynamics.
 
-**Author**: Cao Jing
-
-**Institution**: Nanhang Jincheng College
-
-fan_38324cj@qq.com
-
 ---
 
 ## Architecture
